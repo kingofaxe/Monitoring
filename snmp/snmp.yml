@@ -1,0 +1,104 @@
+# /opt/web/monitoring/snmp/snmp.yml
+
+# ── MikroTik ────────────────────────────────────
+mikrotik:
+  walk:
+    - 1.3.6.1.2.1.1        # system info (nama, uptime)
+    - 1.3.6.1.2.1.2        # interfaces
+    - 1.3.6.1.2.1.31       # ifXTable (traffic extended)
+    - 1.3.6.1.4.1.14988.1  # MikroTik specific OID
+  auth:
+    community: public        # Ganti jika kamu set community string sendiri di MikroTik
+  version: 2
+  metrics:
+    - name: sysUpTime
+      oid: 1.3.6.1.2.1.1.3.0
+      type: gauge
+      help: "Uptime perangkat dalam centiseconds"
+    - name: ifOperStatus
+      oid: 1.3.6.1.2.1.2.2.1.8
+      type: gauge
+      help: "Status interface: 1=up, 2=down"
+      indexes:
+        - labelname: ifIndex
+          type: gauge
+      lookups:
+        - labels: [ifIndex]
+          labelname: ifDescr
+          oid: 1.3.6.1.2.1.2.2.1.2
+          type: DisplayString
+    - name: ifInOctets
+      oid: 1.3.6.1.2.1.2.2.1.10
+      type: counter
+      help: "Total bytes masuk per interface"
+      indexes:
+        - labelname: ifIndex
+          type: gauge
+      lookups:
+        - labels: [ifIndex]
+          labelname: ifDescr
+          oid: 1.3.6.1.2.1.2.2.1.2
+          type: DisplayString
+    - name: ifOutOctets
+      oid: 1.3.6.1.2.1.2.2.1.16
+      type: counter
+      help: "Total bytes keluar per interface"
+      indexes:
+        - labelname: ifIndex
+          type: gauge
+      lookups:
+        - labels: [ifIndex]
+          labelname: ifDescr
+          oid: 1.3.6.1.2.1.2.2.1.2
+          type: DisplayString
+
+# ── Unifi Controller / Switch ────────────────────
+if_mib:
+  walk:
+    - 1.3.6.1.2.1.1        # system info
+    - 1.3.6.1.2.1.2        # interfaces
+    - 1.3.6.1.2.1.31       # ifXTable
+  auth:
+    community: public        # Ganti jika kamu set community string sendiri di Unifi
+  version: 2
+  metrics:
+    - name: sysUpTime
+      oid: 1.3.6.1.2.1.1.3.0
+      type: gauge
+      help: "Uptime perangkat dalam centiseconds"
+    - name: ifOperStatus
+      oid: 1.3.6.1.2.1.2.2.1.8
+      type: gauge
+      help: "Status interface: 1=up, 2=down"
+      indexes:
+        - labelname: ifIndex
+          type: gauge
+      lookups:
+        - labels: [ifIndex]
+          labelname: ifDescr
+          oid: 1.3.6.1.2.1.2.2.1.2
+          type: DisplayString
+    - name: ifInOctets
+      oid: 1.3.6.1.2.1.2.2.1.10
+      type: counter
+      help: "Total bytes masuk per interface"
+      indexes:
+        - labelname: ifIndex
+          type: gauge
+      lookups:
+        - labels: [ifIndex]
+          labelname: ifDescr
+          oid: 1.3.6.1.2.1.2.2.1.2
+          type: DisplayString
+    - name: ifOutOctets
+      oid: 1.3.6.1.2.1.2.2.1.16
+      type: counter
+      help: "Total bytes keluar per interface"
+      indexes:
+        - labelname: ifIndex
+          type: gauge
+      lookups:
+        - labels: [ifIndex]
+          labelname: ifDescr
+          oid: 1.3.6.1.2.1.2.2.1.2
+          type: DisplayString

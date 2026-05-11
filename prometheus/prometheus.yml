@@ -1,0 +1,81 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+
+  # ── Prometheus sendiri ──────────────────────
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ── VM Docker — node exporter ────────────────
+  - job_name: "vm-docker"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+        labels:
+          instance: "vm-docker"
+
+  # ── VM Docker — semua container (cAdvisor) ───
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+        labels:
+          instance: "vm-docker"
+
+  # ── Proxmox host ─────────────────────────────
+  # Install node_exporter di host Proxmox dulu
+  # Ganti IP_PROXMOX dengan IP host Proxmox kamu
+  - job_name: "proxmox"
+    static_configs:
+      - targets: ["10.5.0.10:9100"]
+        labels:
+          instance: "proxmox"
+
+  # ── VM Immich ────────────────────────────────
+  # Install node_exporter di VM Immich dulu
+  # Ganti IP_IMMICH dengan IP VM Immich kamu
+  - job_name: "immich"
+    static_configs:
+      - targets: ["10.5.0.101:9100"]
+        labels:
+          instance: "immich"
+
+  # ── MikroTik via SNMP ───────────────────────
+  # Ganti IP_MIKROTIK dengan IP MikroTik kamu
+  - job_name: "mikrotik"
+    static_configs:
+      - targets: ["10.5.0.1"]
+        labels:
+          instance: "mikrotik"
+    metrics_path: /snmp
+    params:
+      module: [mikrotik]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116
+
+  # ── Unifi Controller via SNMP ────────────────
+  # Ganti IP_UNIFI dengan IP Unifi Controller kamu
+  - job_name: "unifi"
+    static_configs:
+      - targets: ["IP_UNIFI"]
+        labels:
+          instance: "unifi"
+    metrics_path: /snmp
+    params:
+      module: [if_mib]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116
