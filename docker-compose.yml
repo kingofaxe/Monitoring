@@ -1,12 +1,3 @@
-# ╔══════════════════════════════════════════════════════╗
-# ║  MONITORING STACK                                   ║
-# ║  Lokasi: /opt/web/monitoring/                       ║
-# ║                                                     ║
-# ║  1. Edit file .env → isi IP & password              ║
-# ║  2. docker compose up -d                            ║
-# ║  3. Akses: http://IP_SERVER:8099                    ║
-# ╚══════════════════════════════════════════════════════╝
-
 networks:
   monitoring:
     driver: bridge
@@ -19,7 +10,7 @@ volumes:
 services:
 
   # ─────────────────────────────────────────────
-  # NGINX — Reverse proxy, akses semua via :8099
+  # NGINX — Reverse proxy, semua akses via :8099
   # ─────────────────────────────────────────────
   nginx:
     image: nginx:alpine
@@ -34,12 +25,10 @@ services:
     depends_on:
       - grafana
       - prometheus
-      - uptime-kuma
 
   # ─────────────────────────────────────────────
   # GRAFANA — Dashboard & grafik
-  # Via Nginx:  http://IP_SERVER:8099/
-  # Direct:    http://IP_SERVER:3000
+  # Akses: http://IP:8099/
   # ─────────────────────────────────────────────
   grafana:
     image: grafana/grafana:latest
@@ -55,17 +44,11 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL}
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      - GF_SERVER_ROOT_URL=https://grafana.domain-kamu.com
 
   # ─────────────────────────────────────────────
   # PROMETHEUS — Metrics collector
-  # Via Nginx:  http://IP_SERVER:8099/prometheus/
-  # Direct:    http://IP_SERVER:9090
+  # Akses langsung: http://IP:9090
   # ─────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
@@ -84,18 +67,11 @@ services:
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=30d"
       - "--web.enable-lifecycle"
-      - "--web.external-url=/prometheus/"
-      - "--web.route-prefix=/"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
   # ─────────────────────────────────────────────
   # UPTIME KUMA — Status & alert
-  # Via Nginx:  http://IP_SERVER:8099/status/
-  # Direct:    http://IP_SERVER:3001
+  # Akses langsung: http://IP:3001
+  # Tidak lewat nginx karena tidak support sub-path
   # ─────────────────────────────────────────────
   uptime-kuma:
     image: louislam/uptime-kuma:latest
@@ -110,7 +86,7 @@ services:
 
   # ─────────────────────────────────────────────
   # CADVISOR — Monitor semua Docker container
-  # Internal only, diakses Prometheus
+  # Port 8081 (karena 8080 sudah dipakai)
   # ─────────────────────────────────────────────
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -119,7 +95,7 @@ services:
     networks:
       - monitoring
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -132,7 +108,6 @@ services:
 
   # ─────────────────────────────────────────────
   # NODE EXPORTER — Monitor resource VM Docker
-  # Internal only, diakses Prometheus
   # ─────────────────────────────────────────────
   node-exporter:
     image: prom/node-exporter:latest
@@ -154,12 +129,10 @@ services:
 
   # ─────────────────────────────────────────────
   # SNMP EXPORTER — Monitor MikroTik & Unifi
-  # Internal only, diakses Prometheus
+  # Pakai latest agar format snmp.yml support
   # ─────────────────────────────────────────────
   snmp-exporter:
-    # v0.24.1 = versi terakhir yang support format snmp.yml lama
-    # Jangan upgrade ke latest karena format config berubah total
-    image: prom/snmp-exporter:v0.24.1
+    image: prom/snmp-exporter:latest
     container_name: snmp-exporter
     restart: unless-stopped
     networks:

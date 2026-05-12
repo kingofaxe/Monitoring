@@ -2,7 +2,6 @@ groups:
   - name: homeserver_alerts
     rules:
 
-      # Host tidak bisa di-scrape
       - alert: HostDown
         expr: up == 0
         for: 1m
@@ -11,7 +10,6 @@ groups:
         annotations:
           summary: "{{ $labels.instance }} tidak bisa dimonitor"
 
-      # CPU tinggi > 85% selama 5 menit
       - alert: HighCPU
         expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
         for: 5m
@@ -20,7 +18,6 @@ groups:
         annotations:
           summary: "CPU tinggi di {{ $labels.instance }}: {{ $value | printf \"%.1f\" }}%"
 
-      # RAM > 90%
       - alert: HighMemory
         expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
         for: 5m
@@ -29,7 +26,6 @@ groups:
         annotations:
           summary: "RAM hampir habis di {{ $labels.instance }}: {{ $value | printf \"%.1f\" }}%"
 
-      # Disk > 85%
       - alert: DiskAlmostFull
         expr: (node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} - node_filesystem_free_bytes{fstype!~"tmpfs|overlay"}) / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} * 100 > 85
         for: 10m
