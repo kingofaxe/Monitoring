@@ -129,14 +129,15 @@ services:
 
   # ─────────────────────────────────────────────
   # SNMP EXPORTER — Monitor MikroTik & Unifi
-  # Pakai snmp.yml default bawaan image v0.24.1
-  # sudah include module: if_mib, mikrotik, dll
+  # v0.21.0 pakai format snmp.yml lama
   # ─────────────────────────────────────────────
   snmp-exporter:
-    image: prom/snmp-exporter:v0.24.1
+    image: prom/snmp-exporter:v0.21.0
     container_name: snmp-exporter
     restart: unless-stopped
     networks:
       - monitoring
     ports:
       - "9116:9116"
+    volumes:
+      - ./snmp/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
